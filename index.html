@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spice Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#ff9800,#ff5722);
+}
+
+/* HEADER */
+header{
+  text-align:center;
+  padding:30px;
+  color:white;
+}
+
+/* SHOP */
+.shop{
+  background:#fff8e1;
+  padding:30px 5%;
+}
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:20px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  border-radius:14px;
+  padding:15px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.15);
+}
+.card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  border-radius:10px;
+}
+.card h3{color:#d84315;}
+.price{color:#ff6f00;font-weight:bold;}
+
+/* QTY */
+.qty{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0;
+}
+.qty button{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  border:none;
+  background:#ff9800;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
+
+/* BUTTONS */
+.btn{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#ff5722;
+  color:white;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+/* CART */
+.cart{
+  margin-top:30px;
+  background:white;
+  padding:20px;
+  border-radius:14px;
+}
+.cart h3{color:#e65100;}
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  margin:5px 0;
+}
+
+/* MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  align-items:center;
+  justify-content:center;
+}
+.modal-box{
+  background:#fff3e0;
+  padding:20px;
+  border-radius:14px;
+  width:90%;
+  max-width:400px;
+}
+.modal-box input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:1px solid #ffb74d;
+}
+.close{text-align:right;cursor:pointer;}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Fresh Spice Store 🌶️</h1>
+  <p>Add multiple items & order together</p>
+</header>
+
+<section class="shop">
+  <div class="products" id="products"></div>
+
+  <!-- CART -->
+  <div class="cart">
+    <h3>Your Cart</h3>
+    <div id="cartItems"></div>
+    <h4>Total: ₹<span id="total">0</span></h4>
+    <button class="btn" onclick="openModal()">Place Order</button>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="close" onclick="closeModal()">✖</div>
+    <h3>Customer Details</h3>
+    <input id="name" placeholder="Your Name">
+    <input id="mobile" placeholder="Mobile Number">
+    <input id="address" placeholder="Delivery Address">
+    <button class="btn" onclick="sendOrder()">Send Order on WhatsApp</button>
+  </div>
+</div>
+
+<script>
+const products=[
+  {name:"Turmeric powder",price:320,img:"img1.jpeg"},
+  {name:"Garam masala",price:350,img:"img2.jpeg"},
+  {name:"Ghati masala",price:350,img:"img3.jpeg"},
+  {name:"Coriander powder",price:230,img:"img4.jpeg"},
+  {name:"Mirchi powder",price:280,img:"img5.jpeg"},
+  {name:"Kashmiri Mirchi",price:480,img:"img6.jpeg"},
+  {name:"Cumin powder",price:380,img:"img7.jpeg"},
+  {name:"Malvani masala",price:400,img:"img8.jpeg"},
+  {name:"Chicken masala",price:360,img:"img9.jpeg"},
+];
+
+const cart=[];
+const productsDiv=document.getElementById("products");
+const cartItems=document.getElementById("cartItems");
+const totalSpan=document.getElementById("total");
+
+products.forEach(p=>{
+  let qty=0;
+
+  const card=document.createElement("div");
+  card.className="card";
+  card.innerHTML=`
+    <img src="${p.img}">
+    <h3>${p.name}</h3>
+    <p class="price">₹${p.price}/kg</p>
+    <div class="qty">
+      <button>-</button>
+      <span>0</span>
+      <button>+</button>
+    </div>
+    <button class="btn">Add to Cart</button>
+  `;
+
+  const span=card.querySelector("span");
+  const btns=card.querySelectorAll(".qty button");
+
+  btns[0].onclick=()=>{ if(qty>0){ qty--; span.innerText=qty; } }
+  btns[1].onclick=()=>{ qty++; span.innerText=qty; }
+
+  card.querySelector(".btn").onclick=()=>{
+    if(qty>0){
+      cart.push({name:p.name,qty,price:p.price});
+      qty=0;
+      span.innerText=0;
+      updateCart();
+    }
+  };
+
+  productsDiv.appendChild(card);
+});
+
+function updateCart(){
+  cartItems.innerHTML="";
+  let total=0;
+
+  cart.forEach(i=>{
+    const cost=i.qty*i.price;
+    total+=cost;
+    cartItems.innerHTML+=`
+      <div class="cart-item">
+        <span>${i.name} (${i.qty}kg)</span>
+        <span>₹${cost}</span>
+      </div>
+    `;
+  });
+
+  totalSpan.innerText=total;
+}
+
+function openModal(){
+  if(cart.length===0){ alert("Cart is empty"); return; }
+  document.getElementById("modal").style.display="flex";
+}
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+function sendOrder(){
+  let msg="Spice Order\n\n";
+  let total=0;
+
+  cart.forEach(i=>{
+    const cost=i.qty*i.price;
+    total+=cost;
+    msg+=`${i.name} - ${i.qty}kg = ₹${cost}\n`;
+  });
+
+  msg+=`\nTotal: ₹${total}\n\nName: ${name.value}\nMobile: ${mobile.value}\nAddress: ${address.value}`;
+
+  window.open(`https://wa.me/919104546574?text=${encodeURIComponent(msg)}`);
+}
+</script>
+
+</body>
+</html>
